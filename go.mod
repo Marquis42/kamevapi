@@ -1,3 +1,3 @@
-module github.com/cgrates/kamevapi
+module github.com/Marquis42/kamevapi
 
 go 1.18
