@@ -105,13 +105,13 @@ func (kea *KamEvapi) sendAsNetstring(dataStr string) error {
 	cntLen := len([]byte(dataStr)) // Netstrings require number of bytes sent
 	dataOut := fmt.Sprintf("%d:%s,", cntLen, dataStr)
 	kea.connMutex.Lock()
+	defer kea.connMutex.Unlock()
 	_, err := fmt.Fprint(kea.conn, dataOut)
 	if err != nil {
 		kea.Disconnect()
 		return fmt.Errorf("Failed to send message with error: %s, previous data was: %s", err.Error(), kea.prevData)
 	}
 	kea.prevData = dataStr
-	kea.connMutex.Unlock()
 	return nil
 }
 
