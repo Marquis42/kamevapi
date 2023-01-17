@@ -54,6 +54,7 @@ type KamEvapi struct {
 	stopReadEvents       chan struct{} //Keep a reference towards forkedReadEvents so we can stop them whenever necessary
 	errReadEvents        chan error
 	connMutex            *sync.RWMutex
+	prevData             string
 }
 
 // Reads bytes from the buffer and dispatch content received as netstring
@@ -103,12 +104,14 @@ func (kea *KamEvapi) readEvents(exitChan chan struct{}, errReadEvents chan error
 func (kea *KamEvapi) sendAsNetstring(dataStr string) error {
 	cntLen := len([]byte(dataStr)) // Netstrings require number of bytes sent
 	dataOut := fmt.Sprintf("%d:%s,", cntLen, dataStr)
-	kea.connMutex.RLock()
+	kea.connMutex.Lock()
 	_, err := fmt.Fprint(kea.conn, dataOut)
 	if err != nil {
-		return err
+		kea.Disconnect()
+		return fmt.Errorf("Failed to send message with error: %s, previous data was: %s", err.Error(), kea.prevData)
 	}
-	kea.connMutex.RUnlock()
+	kea.prevData = dataStr
+	kea.connMutex.Unlock()
 	return nil
 }
 
