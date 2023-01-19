@@ -61,6 +61,7 @@ type KamEvapi struct {
 func (kea *KamEvapi) readNetstring() ([]byte, error) {
 	contentLenStr, err := kea.rcvBuffer.ReadString(':')
 	if err != nil {
+		kea.Disconnect()
 		return nil, err
 	}
 	cntLen, err := strconv.Atoi(contentLenStr[:len(contentLenStr)-1])
@@ -71,11 +72,13 @@ func (kea *KamEvapi) readNetstring() ([]byte, error) {
 	for i := 0; i < cntLen; i++ {
 		byteRead, err := kea.rcvBuffer.ReadByte()
 		if err != nil {
+			kea.Disconnect()
 			return nil, err
 		}
 		bytesRead[i] = byteRead
 	}
 	if byteRead, err := kea.rcvBuffer.ReadByte(); err != nil { // Crosscheck that our received content ends in , which is standard for netstrings
+		kea.Disconnect()
 		return nil, err
 	} else if byteRead != ',' {
 		return nil, fmt.Errorf("Crosschecking netstring failed, no comma in the end but: %s", string(byteRead))
