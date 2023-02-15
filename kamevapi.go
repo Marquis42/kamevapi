@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -217,7 +218,7 @@ func (kea *KamEvapi) ReconnectIfNeeded() error {
 // ReadEvents reads events from socket, attempt reconnect if disconnected
 func (kea *KamEvapi) ReadEvents() (err error) {
 	for {
-		if err = <-kea.errReadEvents; err == io.EOF { // Disconnected, try reconnect
+		if err = <-kea.errReadEvents; err == io.EOF || err == syscall.ECONNRESET { // Disconnected, try reconnect
 			if err = kea.Disconnect(); err != nil {
 				break
 			}
